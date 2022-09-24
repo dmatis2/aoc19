@@ -1,11 +1,12 @@
 import { getFileContent, getDataAsArrayOfNumbers } from './utils.js';
 
 class Amplifier {
-  constructor(arr, input) {
+  constructor(arr, input = null) {
     this.arr = JSON.parse(JSON.stringify(arr));
     this.input = input;
     this.currentIndex = 0;
     this.isHalted = false;
+    this.isPaused = false;
     this.output = [];
     this.a = 0;
     this.b = 0;
@@ -14,6 +15,14 @@ class Amplifier {
     this.second = '';
     this.op = '';
     this.regex = /(?<third>\d)(?<second>\d)(?<first>\d)(?<op>\d{2})/;
+  }
+
+  setInput(input) {
+    this.input = input;
+  }
+
+  pushToInput(value) {
+    this.input.push(value);
   }
 
   getCurrentInstructionWithParameters() {
@@ -62,7 +71,7 @@ class Amplifier {
     const value = parseInt(this.first) === 0 ? this.arr[this.a] : this.a;
     if (value !== 0) {
       this.output.push(value);
-      this.isHalted = true;
+      this.isPaused = true;
     }
     this.currentIndex += 2;
   }
@@ -115,19 +124,25 @@ class Amplifier {
       else {
         return this.arr[0];
       }
-      if (this.isHalted) return this.output[0];
+      if (this.isPaused) {
+        this.isPaused = false;
+        const val = this.output.shift();
+        return val;
+      }
     }
+    this.isHalted = true;
     return this.arr[0];
   }
 }
 
 const first = (arr) => {
+  let [ from, to ] = [ 0, 5 ]
   let max = 0;
-  for (let a = 0; a < 5; a++) {
-    for (let b = 0; b < 5; b++) {
-      for (let c = 0; c < 5; c++) {
-        for (let d = 0; d < 5; d++) {
-          for (let e = 0; e < 5; e++) {
+  for (let a = from; a < to; a++) {
+    for (let b = from; b < to; b++) {
+      for (let c = from; c < to; c++) {
+        for (let d = from; d < to; d++) {
+          for (let e = from; e < to; e++) {
             if (new Set([a, b, c, d, e]).size !== 5) continue;
             const amp1 = new Amplifier(arr, [a, 0]);
             const out1 = amp1.process();
@@ -150,11 +165,40 @@ const first = (arr) => {
 };
 
 const second = (arr) => {
-  const result = multiProcessPart2(arr, 0);
-  console.log(result);
-  return result;
+  let [ from, to ] = [ 5, 10 ]
+  let max = 0;
+  for (let a = from; a < to; a++) {
+    for (let b = from; b < to; b++) {
+      for (let c = from; c < to; c++) {
+        for (let d = from; d < to; d++) {
+          for (let e = from; e < to; e++) {
+            if (new Set([a, b, c, d, e]).size !== 5) continue;
+            const vals = [a, b, c, d, e];
+            const amps = [...Array(6)].map(x => new Amplifier(arr));
+            amps[0].setInput([ a, 0 ]);
+            let index = 0;
+            while(!amps[4].isHalted) {
+              let tmpOutput = amps[index].process();
+              if (index === 4 && tmpOutput > max) {
+                max = tmpOutput;
+              }
+              let nextAmpIndex = (index + 1) % 5;
+              if(amps[nextAmpIndex].input === null) {
+                amps[nextAmpIndex].setInput([ vals[nextAmpIndex], tmpOutput]);
+              } else {
+                amps[nextAmpIndex].pushToInput(tmpOutput);
+              }
+              index = (index + 1) % 5;
+            }
+          }
+        }
+      }
+    }
+  }
+  console.log(max);
+  return max;
 };
 
 const data = getDataAsArrayOfNumbers(getFileContent('input.txt'), ',');
 console.assert(first(data) === 255590, 'Not matching first part');
-// console.assert(second(data) === 0, "Not matching second part");
+console.assert(second(data) === 58285150, "Not matching second part");

@@ -71,14 +71,24 @@ const process = (_arr, _input) => {
 };
 
 const first = (arr) => {
-  // const result = process([arr[0], 12, 2, ...arr.slice(3)], [1]);
-  const result = process(arr, [1]);
+  const result = process([arr[0], 12, 2, ...arr.slice(3)]);
   console.log(result);
   return result;
 };
 
-const second = (arr) => {
-  const result = process(arr, [5]);
+const second = (_arr) => {
+  for (let noun = 0; noun <= 99; noun++) {
+    for (let verb = 0; verb <= 99; verb++) {
+      const arr = JSON.parse(JSON.stringify(_arr));
+      const _result = process([arr[0], noun, verb, ...arr.slice(3)]);
+      if (_result === 19690720) {
+        const result = 100 * noun + verb;
+        console.log(result);
+        return result;
+      }
+    }
+  }
+  const result = -1;
   console.log(result);
   return result;
 };
